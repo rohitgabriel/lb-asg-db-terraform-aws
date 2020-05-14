@@ -9,6 +9,7 @@ terraform {
 
 locals {
   app_name = "techtestapp"
+  app_name2 = "testapp"
 }
 #####
 # VPC
@@ -301,8 +302,8 @@ EOF
 }
 
 resource "aws_iam_policy" "policy" {
-  name        = "testapp_policy"
-  description = "testapp policy"
+  name        = "${local.app_name2}_policy"
+  description = "${local.app_name2} policy"
   policy      = <<POLICY
 {
     "Version": "2012-10-17",
@@ -402,7 +403,7 @@ resource "aws_iam_instance_profile" "test_profile" {
 #####
 resource "aws_security_group" "internet" {
   vpc_id      = aws_vpc.vpc_network_VPC.id
-  name        = "testapp_egress_sg"
+  name        = "${local.app_name2}_egress_sg"
   description = "security group to allow all egress traffic"
   egress {
     from_port   = 0
@@ -411,14 +412,14 @@ resource "aws_security_group" "internet" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    project = "testapp"
+    project = "${local.app_name2}"
   }
 }
 
 resource "aws_security_group" "public" {
 
   vpc_id      = aws_vpc.vpc_network_VPC.id
-  name        = "testapp_lb"
+  name        = "${local.app_name2}_lb"
   description = "security group to allow inbound traffic on port 3000 from internet"
   depends_on  = [aws_security_group.private]
   ingress {
@@ -434,7 +435,7 @@ resource "aws_security_group" "public" {
     security_groups = [aws_security_group.private.id]
   }
   tags = {
-    project = "testapp"
+    project = "${local.app_name2}"
   }
 }
 
@@ -442,7 +443,7 @@ resource "aws_security_group" "public" {
 resource "aws_security_group" "private" {
 
   vpc_id      = aws_vpc.vpc_network_VPC.id
-  name        = "testapp_ingress_nodejs"
+  name        = "${local.app_name2}_ingress_nodejs"
   description = "security group to allow inbound traffic on port 3000 from elb"
   ingress {
     from_port   = 3000
@@ -451,14 +452,14 @@ resource "aws_security_group" "private" {
     cidr_blocks = [aws_subnet.vpc_network_SubnetAPublic.cidr_block, aws_subnet.vpc_network_SubnetBPublic.cidr_block, aws_subnet.vpc_network_SubnetCPublic.cidr_block]
   }
   tags = {
-    project = "testapp"
+    project = "${local.app_name2}"
   }
 }
 
 // Create Security group to allow ingress traffic to nodejs app 
 resource "aws_security_group" "postgresdb" {
   vpc_id      = aws_vpc.vpc_network_VPC.id
-  name        = "testapp_ingress_postgresdb"
+  name        = "${local.app_name2}_ingress_postgresdb"
   description = "security group that allows ssh and all egress traffic"
   ingress {
     from_port   = 5432
@@ -467,7 +468,7 @@ resource "aws_security_group" "postgresdb" {
     cidr_blocks = [aws_subnet.vpc_network_SubnetAPrivate.cidr_block, aws_subnet.vpc_network_SubnetBPrivate.cidr_block, aws_subnet.vpc_network_SubnetCPrivate.cidr_block]
   }
   tags = {
-    project = "testapp"
+    project = "${local.app_name2}"
   }
 }
 #####
@@ -500,7 +501,7 @@ resource "aws_elb" "clb" {
   connection_draining_timeout = 400
 
   tags = {
-    project = "testapp"
+    project = "${local.app_name2}"
   }
 }
 
@@ -513,16 +514,16 @@ resource "random_string" "dbpass" {
 }
 
 resource "aws_db_subnet_group" "testapp_db_group" {
-  name       = "testapp_db_group"
+  name       = "${local.app_name2}_db_group"
   subnet_ids = data.aws_subnet_ids.privatesubnets.ids
 
   tags = {
-    Name    = "testapp_db_group"
-    Project = "testapp"
+    Name    = "${local.app_name2}_db_group"
+    Project = "${local.app_name2}"
   }
 }
 resource "aws_db_instance" "testapp_db" {
-  identifier                          = "testappdb"
+  identifier                          = "${local.app_name2}db"
   engine                              = "postgres"
   engine_version                      = "9.6.9"
   instance_class                      = var.db_instance_type
@@ -542,7 +543,7 @@ resource "aws_db_instance" "testapp_db" {
   db_subnet_group_name                = aws_db_subnet_group.testapp_db_group.id
   deletion_protection                 = false
   tags = {
-    project = "testapp"
+    project = "${local.app_name2}"
   }
 }
 #####
@@ -550,7 +551,7 @@ resource "aws_db_instance" "testapp_db" {
 #####
 // Create a new secret with the password passed in as variable, this is set as the DB password 
 resource "aws_secretsmanager_secret" "TestAppSecret2" {
-  name        = "dev2/testappdatabase1"
+  name        = "dev2/${local.app_name2}database1"
   description = "postgres credentials"
   # rotation_rules {
   #   automatically_after_days = 7
@@ -584,7 +585,7 @@ locals {
 # Launch configuration
 ######
 resource "aws_launch_configuration" "testapp_lc" {
-  name_prefix     = "testapp-launch-configuration-"
+  name_prefix     = "${local.app_name2}-launch-configuration-"
   image_id        = data.aws_ami.latest_ubuntu.id
   instance_type   = var.instance_type
   security_groups = [aws_security_group.private.id, aws_security_group.internet.id]
@@ -613,7 +614,7 @@ resource "aws_launch_configuration" "testapp_lc" {
     ./TechTestApp updatedb -s
     ./TechTestApp serve
   EOT
-  key_name             = "postgrestest"
+  #key_name             = "postgrestest"
   iam_instance_profile = aws_iam_instance_profile.test_profile.name
 
   ebs_block_device {
@@ -638,7 +639,7 @@ resource "aws_launch_configuration" "testapp_lc" {
 # Autoscaling group
 ######
 resource "aws_autoscaling_group" "testapp_asg" {
-  name                      = "testapp_asg"
+  name                      = "${local.app_name2}_asg"
   max_size                  = 3
   min_size                  = 1
   desired_capacity          = 1
@@ -652,14 +653,14 @@ resource "aws_autoscaling_group" "testapp_asg" {
   tags = [
     {
       key                 = "Project"
-      value               = "testapp"
+      value               = "${local.app_name2}"
       propagate_at_launch = true
     },
     {
       key                 = "asg"
       value               = "yes"
       propagate_at_launch = true
-      Name                = "testapp_asg"
+      Name                = "${local.app_name2}_asg"
     },
   ]
 
