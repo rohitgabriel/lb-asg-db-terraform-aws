@@ -1,26 +1,18 @@
+provider "aws" {
+  version = ">= 2.53"
+  region  = var.AWS_REGION
+}
+
+terraform {
+  required_version = ">= 0.12"
+}
+
 locals {
   app_name = "techtestapp"
 }
-
-// Create new VPC using module
-# module "vpc" {
-#   source = "terraform-aws-modules/vpc/aws"
-
-#   name = "testappvpc"
-#   cidr = "10.0.0.0/16"
-
-#   azs             = ["ap-southeast-2a", "ap-southeast-2b", "ap-southeast-2c"]
-#   private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-#   public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
-
-#   enable_nat_gateway = true
-#   enable_vpn_gateway = false
-
-#   tags = {
-#     app = "testapp"
-#   }
-# }
-// VPC
+#####
+# VPC
+#####
 resource "aws_vpc" "vpc_network_VPC" {
   cidr_block           = "10.0.0.0/16"
   instance_tenancy     = "default"
@@ -32,7 +24,9 @@ resource "aws_vpc" "vpc_network_VPC" {
   }
 }
 
-//Subnets
+#####
+# Subnets
+#####
 resource "aws_subnet" "vpc_network_SubnetAPublic" {
   vpc_id                  = aws_vpc.vpc_network_VPC.id
   cidr_block              = "10.0.101.0/24"
@@ -153,7 +147,9 @@ resource "aws_nat_gateway" "nat_gw_C_Public" {
   }
 }
 
-//Route tables
+#####
+# Route Tables
+#####
 resource "aws_route_table" "vpc_network_RouteTableAPublic" {
   vpc_id = aws_vpc.vpc_network_VPC.id
   route {
@@ -226,7 +222,9 @@ resource "aws_route_table" "vpc_network_RouteTableCPrivate" {
   }
 }
 
-//route associations 
+#####
+# Route Assocations
+#####
 resource "aws_route_table_association" "vpc_network_RouteTableAPublic" {
   subnet_id      = aws_subnet.vpc_network_SubnetAPublic.id
   route_table_id = aws_route_table.vpc_network_RouteTableAPublic.id
@@ -252,7 +250,9 @@ resource "aws_route_table_association" "vpc_network_RouteTableCPrivate" {
   route_table_id = aws_route_table.vpc_network_RouteTableCPrivate.id
 }
 
-// Create Security group to allow egress traffic
+#####
+# Subnet data
+#####
 data "aws_subnet_ids" "all" {
   vpc_id     = aws_vpc.vpc_network_VPC.id
   depends_on = [aws_subnet.vpc_network_SubnetCPrivate]
@@ -276,6 +276,130 @@ data "aws_subnet_ids" "publicsubnets" {
   }
 }
 
+#####
+# IAM
+#####
+// Create new IAM Role with s3, secretsmanager and RDS access
+resource "aws_iam_role" "ec2_s3_secretmanager_role" {
+  name               = "s3-role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+  // assume_role_policy = "${file("assumerolepolicy.json")}"
+}
+
+resource "aws_iam_policy" "policy" {
+  name        = "testapp_policy"
+  description = "testapp policy"
+  policy      = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:ListSecretVersionIds"
+            ],
+            "Resource": "${aws_secretsmanager_secret.TestAppSecret2.arn}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:GetRandomPassword",
+                "secretsmanager:ListSecrets"
+            ],
+            "Resource": "${aws_secretsmanager_secret_version.TestAppCredentials2.arn}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "rds:*",
+            "Resource": "${aws_db_instance.testapp_db.arn}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetAccessPoint",
+                "s3:GetLifecycleConfiguration",
+                "s3:GetBucketTagging",
+                "s3:GetInventoryConfiguration",
+                "s3:GetObjectVersionTagging",
+                "s3:ListBucketVersions",
+                "s3:GetBucketLogging",
+                "s3:ListBucket",
+                "s3:GetAccelerateConfiguration",
+                "s3:GetBucketPolicy",
+                "s3:GetObjectVersionTorrent",
+                "s3:GetObjectAcl",
+                "s3:GetEncryptionConfiguration",
+                "s3:GetBucketObjectLockConfiguration",
+                "s3:GetBucketRequestPayment",
+                "s3:GetAccessPointPolicyStatus",
+                "s3:GetObjectVersionAcl",
+                "s3:GetObjectTagging",
+                "s3:GetMetricsConfiguration",
+                "s3:HeadBucket",
+                "s3:GetBucketPublicAccessBlock",
+                "s3:GetBucketPolicyStatus",
+                "s3:ListBucketMultipartUploads",
+                "s3:GetObjectRetention",
+                "s3:GetBucketWebsite",
+                "s3:ListAccessPoints",
+                "s3:ListJobs",
+                "s3:GetBucketVersioning",
+                "s3:GetBucketAcl",
+                "s3:GetObjectLegalHold",
+                "s3:GetBucketNotification",
+                "s3:GetReplicationConfiguration",
+                "s3:ListMultipartUploadParts",
+                "s3:GetObject",
+                "s3:GetObjectTorrent",
+                "s3:GetAccountPublicAccessBlock",
+                "s3:ListAllMyBuckets",
+                "s3:DescribeJob",
+                "s3:GetBucketCORS",
+                "s3:GetAnalyticsConfiguration",
+                "s3:GetObjectVersionForReplication",
+                "s3:GetBucketLocation",
+                "s3:GetAccessPointPolicy",
+                "s3:GetObjectVersion"
+            ],
+            "Resource": "*"
+        }
+    ]
+  }
+  POLICY
+  #file("policys3secret.json")
+  # policy      = "${file("policys3secret.json")}"
+}
+
+resource "aws_iam_policy_attachment" "test_attach" {
+  name       = "test_attachment"
+  roles      = [aws_iam_role.ec2_s3_secretmanager_role.name]
+  policy_arn = aws_iam_policy.policy.arn
+}
+
+resource "aws_iam_instance_profile" "test_profile" {
+  name = "test_profile"
+  role = aws_iam_role.ec2_s3_secretmanager_role.name
+}
+#####
+# Security Groups
+#####
 resource "aws_security_group" "internet" {
   vpc_id      = aws_vpc.vpc_network_VPC.id
   name        = "testapp_egress_sg"
@@ -346,11 +470,11 @@ resource "aws_security_group" "postgresdb" {
     project = "testapp"
   }
 }
-
-# Create a new load balancer
+#####
+# ELB
+#####
 resource "aws_elb" "clb" {
   name = "elb-techtest5"
-  # availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
 
 
   listener {
@@ -380,40 +504,6 @@ resource "aws_elb" "clb" {
   }
 }
 
-######
-# ELB
-######
-# module "elb" {
-#   source = "terraform-aws-modules/elb/aws"
-
-#   name = "elb-techtest4"
-
-#   subnets         = data.aws_subnet_ids.publicsubnets.ids
-#   security_groups = [aws_security_group.public.id]
-#   internal        = false
-
-#   listener = [
-#     {
-#       instance_port     = "3000"
-#       instance_protocol = "HTTP"
-#       lb_port           = "3000"
-#       lb_protocol       = "HTTP"
-#     },
-#   ]
-
-#   health_check = {
-#     target              = "HTTP:3000/"
-#     interval            = 30
-#     healthy_threshold   = 2
-#     unhealthy_threshold = 2
-#     timeout             = 5
-#   }
-
-#   tags = {
-#     project = "testapp"
-#   }
-# }
-
 #####
 # DB
 #####
@@ -422,44 +512,49 @@ resource "random_string" "dbpass" {
   special = false
 }
 
-module "db" {
-  source = "terraform-aws-modules/rds/aws"
+resource "aws_db_subnet_group" "testapp_db_group" {
+  name       = "testapp_db_group"
+  subnet_ids = data.aws_subnet_ids.privatesubnets.ids
 
-  identifier = "testapp-postgres"
-
+  tags = {
+    Name    = "testapp_db_group"
+    Project = "testapp"
+  }
+}
+resource "aws_db_instance" "testapp_db" {
+  identifier                          = "testappdb"
   engine                              = "postgres"
   engine_version                      = "9.6.9"
-  instance_class                      = "db.t2.micro"
+  instance_class                      = var.db_instance_type
   allocated_storage                   = 10
-  storage_encrypted                   = false
-  iam_database_authentication_enabled = true
-  multi_az                            = true
+  max_allocated_storage               = 20
+  storage_type                        = "gp2"
   name                                = "app"
   username                            = "postgres"
   password                            = random_string.dbpass.result
+  iam_database_authentication_enabled = true
+  multi_az                            = true
   port                                = "5432"
   vpc_security_group_ids              = [aws_security_group.postgresdb.id]
   maintenance_window                  = "Mon:00:00-Mon:03:00"
   backup_window                       = "03:00-06:00"
   backup_retention_period             = 0
+  db_subnet_group_name                = aws_db_subnet_group.testapp_db_group.id
+  deletion_protection                 = false
   tags = {
     project = "testapp"
   }
-  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
-  subnet_ids                      = data.aws_subnet_ids.privatesubnets.ids
-  family                          = "postgres9.6"
-  major_engine_version            = "9.6"
-  deletion_protection             = false
 }
-
-
+#####
+# Secret Manager
+#####
 // Create a new secret with the password passed in as variable, this is set as the DB password 
 resource "aws_secretsmanager_secret" "TestAppSecret2" {
   name        = "dev2/testappdatabase1"
   description = "postgres credentials"
-  #   rotation_rules {
-  #     automatically_after_days = 7
-  #   }
+  # rotation_rules {
+  #   automatically_after_days = 7
+  # }
 }
 
 resource "aws_secretsmanager_secret_version" "TestAppCredentials2" {
@@ -467,21 +562,6 @@ resource "aws_secretsmanager_secret_version" "TestAppCredentials2" {
   secret_string = "{\"username\":\"postgres\",\"password\":\"${random_string.dbpass.result}\"}"
 }
 
-# data "aws_secretsmanager_secret_version" "by-version-stage" {
-#   secret_id  = aws_secretsmanager_secret.TestAppSecret2.id
-#   depends_on = [module.db]
-# }
-
-// Create Launch Configuration and Auto Scaling group 
-
-
-
-
-# data "aws_security_group" "default" {
-#   vpc_id     = module.vpc.vpc_id
-#   name       = "sg_demo"
-#   depends_on = [module.vpc]
-# }
 
 data "aws_ami" "latest_ubuntu" {
   most_recent = true
@@ -503,15 +583,14 @@ locals {
 ######
 # Launch configuration
 ######
-resource "aws_launch_configuration" "this" {
-  name_prefix = "testapp-launch-configuration-"
-  image_id    = data.aws_ami.latest_ubuntu.id
-  #image_id       = "ami-02a599eb01e3b3c5b"
-  instance_type   = "t2.micro"
+resource "aws_launch_configuration" "testapp_lc" {
+  name_prefix     = "testapp-launch-configuration-"
+  image_id        = data.aws_ami.latest_ubuntu.id
+  instance_type   = var.instance_type
   security_groups = [aws_security_group.private.id, aws_security_group.internet.id]
   // Use the file content if that is 
   # user_data       = file("userdata.sh")
-  user_data = <<-EOT
+  user_data            = <<-EOT
     #!/bin/bash
     apt-get update -y
     snap install --classic go
@@ -528,66 +607,47 @@ resource "aws_launch_configuration" "this" {
     chmod 755 ./TechTestApp
     sed -i '/ListenHost/c\"ListenHost" = "0.0.0.0"' conf.toml
     aws rds describe-db-instances --db-instance-identifier testapp-postgres > /tmp/dbdetails.txt
-    x=$(aws rds describe-db-instances --db-instance-identifier testapp-postgres| jq '.DBInstances[0].Endpoint.Address')
+    x=$(aws rds describe-db-instances --db-instance-identifier testappdb | jq '.DBInstances[0].Endpoint.Address')
     sed -i "s/\"localhost\"/$x/g" conf.toml
     sed -i '/DbPassword/c\\"DbPassword\" = \"${local.json_data}\"' conf.toml
     ./TechTestApp updatedb -s
     ./TechTestApp serve
   EOT
-  key_name  = "postgrestest"
-  #iam_instance_profile = "postgres-secret-read"
+  key_name             = "postgrestest"
   iam_instance_profile = aws_iam_instance_profile.test_profile.name
+
+  ebs_block_device {
+    device_name           = "/dev/xvdz"
+    volume_type           = "gp2"
+    volume_size           = "50"
+    delete_on_termination = true
+  }
+
+
+  root_block_device {
+    volume_size = "50"
+    volume_type = "gp2"
+  }
 
   lifecycle {
     create_before_destroy = true
   }
-  depends_on = [module.db]
+  depends_on = [aws_db_instance.testapp_db]
 }
 ######
 # Autoscaling group
 ######
-module "demo_asg" {
-  source = "terraform-aws-modules/autoscaling/aws"
-
-  name                 = "testapp-asg-instance"
-  launch_configuration = aws_launch_configuration.this.name # Use the existing launch configuration
-  create_lc            = false                              # disables creation of launch configuration
-  #lc_name = "demo-lc"
-
-  image_id = "ami-02a599eb01e3b3c5b"
-  #image_id        = data.aws_ami.amazon_linux.id
-  #image_id        = var.AMI_ID
-  instance_type                = "t2.micro"
-  security_groups              = [aws_security_group.internet.id]
-  load_balancers               = [aws_elb.clb.id]
-  associate_public_ip_address  = true
-  key_name                     = "postgrestest"
-  recreate_asg_when_lc_changes = true
-
-  ebs_block_device = [
-    {
-      device_name           = "/dev/xvdz"
-      volume_type           = "gp2"
-      volume_size           = "50"
-      delete_on_termination = true
-    },
-  ]
-
-  root_block_device = [
-    {
-      volume_size = "50"
-      volume_type = "gp2"
-    },
-  ]
-
-  # Auto scaling group
-  asg_name                  = "demo-asg"
-  vpc_zone_identifier       = data.aws_subnet_ids.privatesubnets.ids
-  health_check_type         = "EC2"
-  min_size                  = 0
+resource "aws_autoscaling_group" "testapp_asg" {
+  name                      = "testapp_asg"
   max_size                  = 3
-  desired_capacity          = 0
-  wait_for_capacity_timeout = 0
+  min_size                  = 1
+  desired_capacity          = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  launch_configuration      = aws_launch_configuration.testapp_lc.name
+  vpc_zone_identifier       = data.aws_subnet_ids.privatesubnets.ids
+  load_balancers            = [aws_elb.clb.id]
 
   tags = [
     {
@@ -596,10 +656,17 @@ module "demo_asg" {
       propagate_at_launch = true
     },
     {
-      key                 = "Project"
-      value               = "testapp"
+      key                 = "asg"
+      value               = "yes"
       propagate_at_launch = true
+      Name                = "testapp_asg"
     },
   ]
+
+  timeouts {
+    delete = "30m"
+  }
 }
+
+
 

@@ -3,6 +3,17 @@ variable "AWS_REGION" {
   description = "Set the AWS region"
   type        = string
 }
+variable "instance_type" {
+  default     = "t2.micro"
+  description = "Set the EC2 Instance type"
+  type        = string
+}
+
+variable "db_instance_type" {
+  default     = "db.t2.micro"
+  description = "Set the RDS Instance type"
+  type        = string
+}
 
 # variable key_name {
 #   default = "postgrestest"

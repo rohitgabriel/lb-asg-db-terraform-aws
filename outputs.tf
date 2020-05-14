@@ -1,24 +1,19 @@
-# output "region" {
-#   description = "AWS region"
-#   value       = var.AWS_REGION
-# }
-
-output "this_db_instance_endpoint" {
-  description = "The connection endpoint"
-  value       = "${module.db.this_db_instance_endpoint}"
-}
-
-output "this_db_instance_name" {
+output "db_instance_name" {
   description = "The database name"
-  value       = "${module.db.this_db_instance_name}"
+  value       = aws_db_instance.testapp_db.name
 }
 
-# ELB DNS name
-output "this_elb_dns_name" {
+output "db_instance_endpoint" {
+  description = "The database connection endpoint"
+  value       = aws_db_instance.testapp_db.endpoint
+}
+
+output "elb_dns_name" {
   description = "DNS Name of the ELB"
   value       = aws_elb.clb.dns_name
 }
 
-# output "db_password" {
-#   value = jsondecode(data.aws_secretsmanager_secret_version.by-version-stage.secret_string)["password"]
-# }
+output "db_password" {
+  description = "Decoded databasse password"
+  value       = jsondecode(aws_secretsmanager_secret_version.TestAppCredentials2.secret_string)["password"]
+}
