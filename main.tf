@@ -420,17 +420,17 @@ resource "aws_security_group" "public" {
 
   vpc_id      = aws_vpc.vpc_network_VPC.id
   name        = "${local.app_name2}_lb"
-  description = "security group to allow inbound traffic on port 3000 from internet"
+  description = "security group to allow inbound traffic on port ${var.lb_port} from internet"
   depends_on  = [aws_security_group.private]
   ingress {
-    from_port   = 3000
-    to_port     = 3000
+    from_port   = var.lb_port
+    to_port     = var.lb_port
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
-    from_port       = 3000
-    to_port         = 3000
+    from_port       = var.lb_port
+    to_port         = var.lb_port
     protocol        = "tcp"
     security_groups = [aws_security_group.private.id]
   }
@@ -444,10 +444,10 @@ resource "aws_security_group" "private" {
 
   vpc_id      = aws_vpc.vpc_network_VPC.id
   name        = "${local.app_name2}_ingress_nodejs"
-  description = "security group to allow inbound traffic on port 3000 from elb"
+  description = "security group to allow inbound traffic on port ${var.app_port} from elb"
   ingress {
-    from_port   = 3000
-    to_port     = 3000
+    from_port   = var.app_port
+    to_port     = var.app_port
     protocol    = "tcp"
     cidr_blocks = [aws_subnet.vpc_network_SubnetAPublic.cidr_block, aws_subnet.vpc_network_SubnetBPublic.cidr_block, aws_subnet.vpc_network_SubnetCPublic.cidr_block]
   }
@@ -462,8 +462,8 @@ resource "aws_security_group" "postgresdb" {
   name        = "${local.app_name2}_ingress_postgresdb"
   description = "security group that allows ssh and all egress traffic"
   ingress {
-    from_port   = 5432
-    to_port     = 5432
+    from_port   = var.db_port
+    to_port     = var.db_port
     protocol    = "tcp"
     cidr_blocks = [aws_subnet.vpc_network_SubnetAPrivate.cidr_block, aws_subnet.vpc_network_SubnetBPrivate.cidr_block, aws_subnet.vpc_network_SubnetCPrivate.cidr_block]
   }
@@ -479,9 +479,9 @@ resource "aws_elb" "clb" {
 
 
   listener {
-    instance_port     = 3000
+    instance_port     = var.app_port
     instance_protocol = "http"
-    lb_port           = 3000
+    lb_port           = var.lb_port
     lb_protocol       = "http"
   }
 
@@ -489,7 +489,7 @@ resource "aws_elb" "clb" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
     timeout             = 5
-    target              = "HTTP:3000/"
+    target              = "HTTP:${var.app_port}/"
     interval            = 30
   }
   # instances                   = []
@@ -524,18 +524,18 @@ resource "aws_db_subnet_group" "testapp_db_group" {
 }
 resource "aws_db_instance" "testapp_db" {
   identifier                          = "${local.app_name2}db"
-  engine                              = "postgres"
-  engine_version                      = "9.6.9"
+  engine                              = var.db_engine
+  engine_version                      = var.db_engine_version
   instance_class                      = var.db_instance_type
-  allocated_storage                   = 10
-  max_allocated_storage               = 20
+  allocated_storage                   = var.db_allocated_storage
+  max_allocated_storage               = var.db_max_allocated_storage
   storage_type                        = "gp2"
   name                                = "app"
   username                            = "postgres"
   password                            = random_string.dbpass.result
   iam_database_authentication_enabled = true
   multi_az                            = true
-  port                                = "5432"
+  port                                = var.db_port
   vpc_security_group_ids              = [aws_security_group.postgresdb.id]
   maintenance_window                  = "Mon:00:00-Mon:03:00"
   backup_window                       = "03:00-06:00"
@@ -618,9 +618,9 @@ resource "aws_launch_configuration" "testapp_lc" {
   iam_instance_profile = aws_iam_instance_profile.test_profile.name
 
   ebs_block_device {
-    device_name           = "/dev/xvdz"
-    volume_type           = "gp2"
-    volume_size           = "50"
+    device_name           = var.ebs_device_name
+    volume_type           = var.ebs_volume_type
+    volume_size           = var.ebs_volume_size
     delete_on_termination = true
   }
 
