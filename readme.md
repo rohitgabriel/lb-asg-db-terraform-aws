@@ -30,3 +30,9 @@ https://ELB DNS NAME:3000<br/>
 
 ## Destroy
 terraform destroy -var="AWS_ACCESS_KEY_ID=AWS access key" -var="AWS_SECRET_ACCESS_KEY=aws secret key" -var="AWS_REGION=aws region"  -var="db_password=Password more than 8 chars" <br/>
+
+# Todo
+- Reimplement the aws_iam_policy resource using the data.aws_iam_policy_document (https://www.terraform.io/docs/providers/aws/d/iam_policy_document.html)
+- Split network resource (VPC) into a separate module
+- Split the DB resource (RDS) into a separate module
+- Use Security Group references e-iher than cidr block references in SG rules.
