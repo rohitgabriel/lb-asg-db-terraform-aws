@@ -1,3 +1,5 @@
+
+
 provider "aws" {
   version = ">= 2.53"
   region  = var.AWS_REGION
@@ -5,6 +7,15 @@ provider "aws" {
 
 terraform {
   required_version = ">= 0.12"
+
+  backend "remote" {
+    organization = "testapp"
+
+    workspaces {
+      name = "dev"
+    }
+  }
+  
 }
 
 locals {
