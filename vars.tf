@@ -4,8 +4,8 @@ variable "AWS_REGION" {
   type        = string
 }
 
-variable "aws-access-key-id" { }
-variable "aws-secret-access-key" { }
+variable "aws-access-key-id" {}
+variable "aws-secret-access-key" {}
 
 variable "instance_type" {
   default     = "t2.micro"
