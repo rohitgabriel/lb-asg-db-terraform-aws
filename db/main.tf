@@ -1,28 +1,23 @@
 #####
 # DB
 #####
-locals {
-  app_name = "techtestapp"
-  app_name2 = "testapp"
-}
-
-resource "random_string" "dbpass" {
+resource "random_password" "dbpass" {
   length  = 8
   special = false
 }
 
 resource "aws_db_subnet_group" "testapp_db_group" {
-  name       = "${local.app_name2}_db_group"
+  name       = "${var.app_name}_db_group"
   subnet_ids = var.subnet_ids
 
   tags = {
-    Name    = "${local.app_name2}_db_group"
-    Project = "${local.app_name2}"
+    Name    = "${var.app_name}_db_group"
+    Project = "${var.app_name}"
   }
 }
 
 resource "aws_db_instance" "testapp_db" {
-  identifier                          = "${local.app_name2}db"
+  identifier                          = "${var.app_name}db"
   engine                              = var.db_engine
   engine_version                      = var.db_engine_version
   instance_class                      = var.db_instance_type
@@ -31,7 +26,7 @@ resource "aws_db_instance" "testapp_db" {
   storage_type                        = "gp2"
   name                                = "app"
   username                            = "postgres"
-  password                            = random_string.dbpass.result
+  password                            = random_password.dbpass.result
   iam_database_authentication_enabled = true
   multi_az                            = true
   port                                = var.db_port
@@ -42,6 +37,6 @@ resource "aws_db_instance" "testapp_db" {
   db_subnet_group_name                = aws_db_subnet_group.testapp_db_group.id
   deletion_protection                 = false
   tags = {
-    project = "${local.app_name2}"
+    project = "${var.app_name}"
   }
 }

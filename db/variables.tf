@@ -36,3 +36,9 @@ variable "db_max_allocated_storage" {
 
 variable "vpc_security_group_ids" {}
 variable "subnet_ids" {}
+
+variable "app_name" {
+  type        = string
+  default     = "techtestapp"
+  description = "Name of the application"
+}

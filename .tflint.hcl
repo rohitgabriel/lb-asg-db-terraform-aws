@@ -1,5 +1,5 @@
 config {
-  module     = false
+  module     = true
   deep_check = false
   force      = true
 }

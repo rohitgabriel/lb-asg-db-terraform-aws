@@ -33,3 +33,9 @@ variable "db_port" {
   description = "Set the RDS port number"
   type        = number
 }
+
+variable "app_name" {
+  type        = string
+  default     = "techtestapp"
+  description = "Name of the application"
+}

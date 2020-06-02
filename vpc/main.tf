@@ -8,7 +8,7 @@ resource "aws_vpc" "vpc_network_VPC" {
   enable_dns_hostnames = "true"
   enable_classiclink   = "false"
   tags = {
-    "Name" = "${var.vpc_cidr} - ${local.app_name}"
+    "Name" = "${var.vpc_cidr} - ${var.app_name}"
   }
 }
 
@@ -31,7 +31,7 @@ resource "aws_subnet" "public" {
   availability_zone       = "${var.AWS_REGION}${var.availability_zones[count.index]}"
 
   tags = {
-    "Name" = "${local.app_name}_Public_${var.availability_zones[count.index]}"
+    "Name" = "${var.app_name}_Public_${var.availability_zones[count.index]}"
   }
 }
 
@@ -44,7 +44,7 @@ resource "aws_subnet" "private" {
   availability_zone       = "${var.AWS_REGION}${var.availability_zones[count.index]}"
 
   tags = {
-    "Name" = "${local.app_name}_Private_${var.availability_zones[count.index]}"
+    "Name" = "${var.app_name}_Private_${var.availability_zones[count.index]}"
   }
 }
 
@@ -53,7 +53,7 @@ resource "aws_internet_gateway" "vpc_network_internetgw" {
   vpc_id = aws_vpc.vpc_network_VPC.id
 
   tags = {
-    Name = "${local.app_name}_igw"
+    Name = "${var.app_name}_igw"
   }
 }
 
@@ -63,7 +63,7 @@ resource "aws_eip" "public" {
 
   vpc = true
   tags = {
-    Name = "${local.app_name}_natgw_Public_${var.availability_zones[count.index]}"
+    Name = "${var.app_name}_natgw_Public_${var.availability_zones[count.index]}"
   }
 }
 
@@ -74,7 +74,7 @@ resource "aws_nat_gateway" "public" {
   subnet_id     = aws_subnet.public[count.index].id
 
   tags = {
-    Name = "${local.app_name}_natgw_Public_${var.availability_zones[count.index]}"
+    Name = "${var.app_name}_natgw_Public_${var.availability_zones[count.index]}"
   }
 
   depends_on = [
@@ -94,7 +94,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "${local.app_name}_Public"
+    Name = "${var.app_name}_Public"
   }
 }
 
@@ -108,7 +108,7 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "${local.app_name}_Private_${var.availability_zones[count.index]}"
+    Name = "${var.app_name}_Private_${var.availability_zones[count.index]}"
   }
 }
 
@@ -162,7 +162,7 @@ data "aws_subnet_ids" "publicsubnets" {
 resource "aws_security_group" "egress" {
   # vpc_id      = aws_vpc.vpc_network_VPC.id
   vpc_id      = aws_vpc.vpc_network_VPC.id
-  name        = "${local.app_name2}_egress_sg"
+  name        = "${var.app_name}_egress_sg"
   description = "security group to allow all egress traffic"
   egress {
     from_port   = 0
@@ -171,14 +171,14 @@ resource "aws_security_group" "egress" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    project = "${local.app_name2}"
+    project = "${var.app_name}"
   }
 }
 
 resource "aws_security_group" "loadbalancer" {
 
   vpc_id      = aws_vpc.vpc_network_VPC.id
-  name        = "${local.app_name2}_lb"
+  name        = "${var.app_name}_lb"
   description = "security group to allow inbound traffic on port ${var.lb_port} from internet"
   # depends_on  = [aws_security_group.appserver]
   ingress {
@@ -194,7 +194,7 @@ resource "aws_security_group" "loadbalancer" {
     cidr_blocks = [aws_vpc.vpc_network_VPC.cidr_block]
   }
   tags = {
-    project = "${local.app_name2}"
+    project = "${var.app_name}"
   }
 }
 
@@ -202,7 +202,7 @@ resource "aws_security_group" "loadbalancer" {
 resource "aws_security_group" "appserver" {
 
   vpc_id      = aws_vpc.vpc_network_VPC.id
-  name        = "${local.app_name2}_ingress_nodejs"
+  name        = "${var.app_name}_ingress_nodejs"
   description = "security group to allow inbound traffic on port ${var.app_port} from elb"
   ingress {
     from_port   = var.app_port
@@ -217,7 +217,7 @@ resource "aws_security_group" "appserver" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    project = "${local.app_name2}"
+    project = "${var.app_name}"
   }
 }
 
@@ -226,7 +226,7 @@ resource "aws_security_group" "appserver" {
 resource "aws_security_group" "postgresdb" {
 
   vpc_id      = aws_vpc.vpc_network_VPC.id
-  name        = "${local.app_name2}_ingress_postgresdb"
+  name        = "${var.app_name}_ingress_postgresdb"
   description = "security group that allows traffic to database"
   ingress {
     from_port   = var.db_port
@@ -235,6 +235,6 @@ resource "aws_security_group" "postgresdb" {
     security_groups = [aws_security_group.appserver.id]
   }
   tags = {
-    project = "${local.app_name2}"
+    project = "${var.app_name}"
   }
 }

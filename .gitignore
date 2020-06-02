@@ -1,3 +1,4 @@
 vars copy
-.terraform
-terraform.*
+**/.terraform
+terraform.tfstate*
+.vscode

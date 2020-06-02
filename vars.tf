@@ -3,6 +3,7 @@ variable "AWS_REGION" {
   description = "Set the AWS region"
   type        = string
 }
+
 variable "instance_type" {
   default     = "t2.micro"
   description = "Set the EC2 Instance type"
@@ -39,8 +40,9 @@ variable "app_port" {
   type        = number
 }
 
-# variable key_name {
-#   default = "postgrestest"
-# }
-
+variable "app_name" {
+  type        = string
+  default     = "techtestapp"
+  description = "Name of the application"
+}
 
