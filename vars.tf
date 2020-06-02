@@ -4,17 +4,6 @@ variable "AWS_REGION" {
   type        = string
 }
 
-variable "AWS_ACCESS_KEY_ID" {
-  default     = "access"
-  description = "Set the AWS region"
-  type        = string
-}
-variable "AWS_SECRET_ACCESS_KEY" {
-  default     = "secret"
-  description = "Set the AWS region"
-  type        = string
-}
-
 variable "instance_type" {
   default     = "t2.micro"
   description = "Set the EC2 Instance type"
