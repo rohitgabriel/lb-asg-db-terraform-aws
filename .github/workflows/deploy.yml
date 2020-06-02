@@ -41,7 +41,7 @@ jobs:
       id: plan
       run: |
         env
-        terraform plan -no-color
+        terraform plan -no-color -var "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" -var "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
