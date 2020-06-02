@@ -1,4 +1,3 @@
 vars copy
 **/.terraform
 terraform.tfstate*
-.vscode

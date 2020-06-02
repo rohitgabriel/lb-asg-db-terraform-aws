@@ -26,7 +26,7 @@ module "db" {
 
   vpc_security_group_ids = [module.vpc.db_security_group_id]
   subnet_ids             = module.vpc.private_subnets
-  app_name = var.app_name
+  app_name               = var.app_name
 }
 
 #####
@@ -50,91 +50,91 @@ resource "aws_iam_role" "ec2_s3_secretmanager_role" {
 }
 
 # data "aws_iam_policy_document" "policy" {
-  # statement {
-  #   sid = "1"
-  #   actions = [
-  #     "secretsmanager:GetResourcePolicy",
-  #     "secretsmanager:GetSecretValue",
-  #     "secretsmanager:DescribeSecret",
-  #     "secretsmanager:ListSecretVersionIds"
-  #   ]
-  #   resources = [
-  #     "${aws_secretsmanager_secret.TestAppSecret3.arn}",
-  #   ]
-  # }
+# statement {
+#   sid = "1"
+#   actions = [
+#     "secretsmanager:GetResourcePolicy",
+#     "secretsmanager:GetSecretValue",
+#     "secretsmanager:DescribeSecret",
+#     "secretsmanager:ListSecretVersionIds"
+#   ]
+#   resources = [
+#     "${aws_secretsmanager_secret.TestAppSecret3.arn}",
+#   ]
+# }
 
-  # statement {
-  #   sid = "2"
-  #   actions = [
-  #     "secretsmanager:GetRandomPassword",
-  #     "secretsmanager:ListSecrets"
-  #   ]
-  #   resources = [
-  #     aws_secretsmanager_secret_version.TestAppCredentials3.arn
-  #   ]
-  # }
+# statement {
+#   sid = "2"
+#   actions = [
+#     "secretsmanager:GetRandomPassword",
+#     "secretsmanager:ListSecrets"
+#   ]
+#   resources = [
+#     aws_secretsmanager_secret_version.TestAppCredentials3.arn
+#   ]
+# }
 
-  # statement {
-  #   sid = "3"
-  #   actions = [
-  #     "rds:*"
-  #   ]
-  #   resources = [
-  #     module.db.arn
-  #   ]
-  # }
+# statement {
+#   sid = "3"
+#   actions = [
+#     "rds:*"
+#   ]
+#   resources = [
+#     module.db.arn
+#   ]
+# }
 
-  # statement {
-  #   sid = "4"
-  #   actions = [
-  #     "s3:GetAccessPoint",
-  #     "s3:GetLifecycleConfiguration",
-  #     "s3:GetBucketTagging",
-  #     "s3:GetInventoryConfiguration",
-  #     "s3:GetObjectVersionTagging",
-  #     "s3:ListBucketVersions",
-  #     "s3:GetBucketLogging",
-  #     "s3:ListBucket",
-  #     "s3:GetAccelerateConfiguration",
-  #     "s3:GetBucketPolicy",
-  #     "s3:GetObjectVersionTorrent",
-  #     "s3:GetObjectAcl",
-  #     "s3:GetEncryptionConfiguration",
-  #     "s3:GetBucketObjectLockConfiguration",
-  #     "s3:GetBucketRequestPayment",
-  #     "s3:GetAccessPointPolicyStatus",
-  #     "s3:GetObjectVersionAcl",
-  #     "s3:GetObjectTagging",
-  #     "s3:GetMetricsConfiguration",
-  #     "s3:HeadBucket",
-  #     "s3:GetBucketPublicAccessBlock",
-  #     "s3:GetBucketPolicyStatus",
-  #     "s3:ListBucketMultipartUploads",
-  #     "s3:GetObjectRetention",
-  #     "s3:GetBucketWebsite",
-  #     "s3:ListAccessPoints",
-  #     "s3:ListJobs",
-  #     "s3:GetBucketVersioning",
-  #     "s3:GetBucketAcl",
-  #     "s3:GetObjectLegalHold",
-  #     "s3:GetBucketNotification",
-  #     "s3:GetReplicationConfiguration",
-  #     "s3:ListMultipartUploadParts",
-  #     "s3:GetObject",
-  #     "s3:GetObjectTorrent",
-  #     "s3:GetAccountPublicAccessBlock",
-  #     "s3:ListAllMyBuckets",
-  #     "s3:DescribeJob",
-  #     "s3:GetBucketCORS",
-  #     "s3:GetAnalyticsConfiguration",
-  #     "s3:GetObjectVersionForReplication",
-  #     "s3:GetBucketLocation",
-  #     "s3:GetAccessPointPolicy",
-  #     "s3:GetObjectVersion"
-  #   ]
-  #   resources = [
-  #     "*"
-  #   ]
+# statement {
+#   sid = "4"
+#   actions = [
+#     "s3:GetAccessPoint",
+#     "s3:GetLifecycleConfiguration",
+#     "s3:GetBucketTagging",
+#     "s3:GetInventoryConfiguration",
+#     "s3:GetObjectVersionTagging",
+#     "s3:ListBucketVersions",
+#     "s3:GetBucketLogging",
+#     "s3:ListBucket",
+#     "s3:GetAccelerateConfiguration",
+#     "s3:GetBucketPolicy",
+#     "s3:GetObjectVersionTorrent",
+#     "s3:GetObjectAcl",
+#     "s3:GetEncryptionConfiguration",
+#     "s3:GetBucketObjectLockConfiguration",
+#     "s3:GetBucketRequestPayment",
+#     "s3:GetAccessPointPolicyStatus",
+#     "s3:GetObjectVersionAcl",
+#     "s3:GetObjectTagging",
+#     "s3:GetMetricsConfiguration",
+#     "s3:HeadBucket",
+#     "s3:GetBucketPublicAccessBlock",
+#     "s3:GetBucketPolicyStatus",
+#     "s3:ListBucketMultipartUploads",
+#     "s3:GetObjectRetention",
+#     "s3:GetBucketWebsite",
+#     "s3:ListAccessPoints",
+#     "s3:ListJobs",
+#     "s3:GetBucketVersioning",
+#     "s3:GetBucketAcl",
+#     "s3:GetObjectLegalHold",
+#     "s3:GetBucketNotification",
+#     "s3:GetReplicationConfiguration",
+#     "s3:ListMultipartUploadParts",
+#     "s3:GetObject",
+#     "s3:GetObjectTorrent",
+#     "s3:GetAccountPublicAccessBlock",
+#     "s3:ListAllMyBuckets",
+#     "s3:DescribeJob",
+#     "s3:GetBucketCORS",
+#     "s3:GetAnalyticsConfiguration",
+#     "s3:GetObjectVersionForReplication",
+#     "s3:GetBucketLocation",
+#     "s3:GetAccessPointPolicy",
+#     "s3:GetObjectVersion"
+#   ]
+#   resources = [
+#     "*"
+#   ]
 #   }
 # }
 
@@ -224,12 +224,12 @@ data "aws_ami" "latest_ubuntu" {
 }
 
 resource "aws_launch_configuration" "testapp_lc" {
-  name_prefix          = "${var.app_name}-launch-configuration-"
-  image_id             = data.aws_ami.latest_ubuntu.id
-  instance_type        = var.instance_type
-  security_groups      = [module.vpc.appserver_security_group_id]
+  name_prefix     = "${var.app_name}-launch-configuration-"
+  image_id        = data.aws_ami.latest_ubuntu.id
+  instance_type   = var.instance_type
+  security_groups = [module.vpc.appserver_security_group_id]
   # iam_instance_profile = aws_iam_instance_profile.test_profile.name
-  user_data            = <<-EOT
+  user_data = <<-EOT
     #cloud-config
     packages:
       - jq
@@ -279,7 +279,7 @@ resource "aws_launch_configuration" "testapp_lc" {
   #   ./TechTestApp updatedb -s
   #   ./TechTestApp serve
   # EOT
-  key_name             = "postgrestest"
+  key_name = "postgrestest"
 
   ebs_block_device {
     device_name           = var.ebs_device_name
