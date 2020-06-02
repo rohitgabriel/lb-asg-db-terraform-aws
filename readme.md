@@ -1,3 +1,4 @@
+![](https://github.com/rohitgabriel/github-actions/workflows/Terraform/badge.svg)
 ### Infrastructure and Application Deployment in AWS
 ![Provisioning diagram](https://eittestappbucket1.s3-ap-southeast-2.amazonaws.com/github-testapp.PNG)<br/>
 
